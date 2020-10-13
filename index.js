@@ -21,11 +21,6 @@ client.connect(err => {
     const feedbacksCollection = client.db('creativeAgencyDatabase').collection('usersFeedbacks');
     const ordersCollection = client.db('creativeAgencyDatabase').collection('orders');
 
-    //root
-    app.get('/', (req, res) => {
-        res.send('Welcome to Creative Agency`s Database')
-    });
-
     //all services
     app.get('/services', (req, res) => {
         servicesCollection.find({})
@@ -94,22 +89,32 @@ client.connect(err => {
 
 //add orders by customer
 app.post('/add-orders', (req, res) => {
-    const projectImg = req.files.projectImg;
-    const type = projectImg.mimetype;
-    const size = projectImg.size;
-    const orderData = req.body;
-    const imgData = projectImg.data;
-    const encImg = imgData.toString('base64');
+    const order = req.body;
 
-    const convertedImg = {
-        contentType: type,
-        size: parseFloat(size),
-        img: Buffer.from(encImg, 'base64')
-    };
-    const readyData = { service: orderData.title, description: orderData.description, name: orderData.title, email: orderData.title, price: orderData.price, projectImg: convertedImg }
-    console.log(readyData);
+    ordersCollection.insertOne(order)
+        .then(result => {
+            if (result.success) {
+                res.sendStatus(200);
+                console.log('Posted Successfully')
+            }
+        })
+        .catch(err => console.log(err));
 
-    // servicesCollection.insertOne(readyData)
+    // const projectImg = req.files.projectImg;
+    // const type = projectImg.mimetype;
+    // const size = projectImg.size;
+    // const orderData = req.body;
+    // const imgData = projectImg.data;
+    // const encImg = imgData.toString('base64');
+
+    // const convertedImg = {
+    //     contentType: type,
+    //     size: parseFloat(size),
+    //     img: Buffer.from(encImg, 'base64')
+    // };
+    // const readyData = { service: orderData.service, description: orderData.description, name: orderData.name, email: orderData.email, price: orderData.price, projectImg: convertedImg };
+
+    // ordersCollection.insertOne(readyData)
     //     .then(result => {
     //         if (result.success) {
     //             res.sendStatus(200);
