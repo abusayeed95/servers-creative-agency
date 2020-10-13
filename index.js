@@ -8,7 +8,7 @@ const fs = require('fs-extra');
 
 const { DB_USER, DB_PASS, DB_NAME, PORT, DB_SERVICES_COLLECTION } = process.env;
 
-const uri = `mongodb+srv://${DB_USER}:${DB_PASS}@cluster0.d5mpt.mongodb.net/${DB_NAME}?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://creativeUser:creativePassword@cluster0.d5mpt.mongodb.net/creativeAgencyDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const app = express();
@@ -17,15 +17,34 @@ app.use(bodyParser.json());
 app.use(fileUpload())
 
 client.connect(err => {
-    const servicesCollection = client.db(DB_NAME).collection(DB_SERVICES_COLLECTION);
+    const servicesCollection = client.db('creativeAgencyDatabase').collection('ourServices');
+    const feedbacksCollection = client.db('creativeAgencyDatabase').collection('usersFeedbacks');
+    const ordersCollection = client.db('creativeAgencyDatabase').collection('orders');
 
     //root
     app.get('/', (req, res) => {
         res.send('Welcome to Creative Agency`s Database')
     });
 
+    //all services
+    app.get('/services', (req, res) => {
+        servicesCollection.find({})
+            .toArray((err, collection) => {
+                res.send(collection)
+            })
+    })
 
 
+    //all Feedbacks
+    app.get('/feedbacks', (req, res) => {
+        feedbacksCollection.find({})
+            .toArray((err, collection) => {
+                res.send(collection)
+                if (err) {
+                    console.log(err)
+                }
+            })
+    })
 
     //add services
     app.post('/add-services', (req, res) => {
@@ -51,11 +70,54 @@ client.connect(err => {
                 }
             })
             .catch(err => console.log(err))
-
     });
 
-    console.log('connected successfully')
+
+    //user Feedbacks
+    app.post('/add-feedback', (req, res) => {
+        const feedback = req.body;
+
+        feedbacksCollection.insertOne(feedback)
+            .then(result => {
+                if (result.success) {
+                    res.sendStatus(200);
+                    console.log('Posted Successfully')
+                }
+            })
+            .catch(err => console.log(err))
+    })
+
+    console.log(err ? err : "no error")
 });
+
+
+
+//add orders by customer
+app.post('/add-orders', (req, res) => {
+    const projectImg = req.files.projectImg;
+    const type = projectImg.mimetype;
+    const size = projectImg.size;
+    const orderData = req.body;
+    const imgData = projectImg.data;
+    const encImg = imgData.toString('base64');
+
+    const convertedImg = {
+        contentType: type,
+        size: parseFloat(size),
+        img: Buffer.from(encImg, 'base64')
+    };
+    const readyData = { service: orderData.title, description: orderData.description, name: orderData.title, email: orderData.title, price: orderData.price, projectImg: convertedImg }
+    console.log(readyData);
+
+    // servicesCollection.insertOne(readyData)
+    //     .then(result => {
+    //         if (result.success) {
+    //             res.sendStatus(200);
+    //             console.log('Posted Successfully')
+    //         }
+    //     })
+    //     .catch(err => console.log(err))
+})
 
 
 
