@@ -20,6 +20,7 @@ client.connect(err => {
     const servicesCollection = client.db('creativeAgencyDatabase').collection('ourServices');
     const feedbacksCollection = client.db('creativeAgencyDatabase').collection('usersFeedbacks');
     const ordersCollection = client.db('creativeAgencyDatabase').collection('orders');
+    const adminsCollection = client.db('creativeAgencyDatabase').collection('admins');
 
     //all services
     app.get('/services', (req, res) => {
@@ -27,7 +28,8 @@ client.connect(err => {
             .toArray((err, collection) => {
                 res.send(collection)
             })
-    })
+    });
+
 
 
     //all Feedbacks
@@ -39,7 +41,49 @@ client.connect(err => {
                     console.log(err)
                 }
             })
+    });
+
+
+
+    //all admins
+    app.get('/admins', (req, res) => {
+        adminsCollection.find({})
+            .toArray((err, collection) => {
+                res.send(collection)
+                if (err) {
+                    console.log(err)
+                }
+            })
+    });
+
+
+
+    //all ordersCollection
+    app.get('/orders', (req, res) => {
+        ordersCollection.find({})
+            .toArray((err, collection) => {
+                res.send(collection)
+                if (err) {
+                    console.log(err)
+                }
+            })
+    });
+
+
+
+    //user Orders 
+    app.get('/users-orders', (req, res) => {
+        const user = req.query.email;
+
+        ordersCollection.find({ email: user })
+            .toArray((err, collection) => {
+                res.send(collection)
+                if (err) {
+                    console.log(err)
+                }
+            })
     })
+
 
     //add services
     app.post('/add-services', (req, res) => {
@@ -80,51 +124,49 @@ client.connect(err => {
                 }
             })
             .catch(err => console.log(err))
+    });
+
+    //add orders by customer
+    app.post('/add-orders', (req, res) => {
+        const projectImg = req.files.projectImg;
+        const type = projectImg.mimetype;
+        const size = projectImg.size;
+        const orderData = req.body;
+        const imgData = projectImg.data;
+        const encImg = imgData.toString('base64');
+
+        const convertedImg = {
+            contentType: type,
+            size: parseFloat(size),
+            img: Buffer.from(encImg, 'base64')
+        };
+        const readyData = { service: orderData.service, orderDescription: orderData.orderDescription, name: orderData.name, email: orderData.email, price: orderData.price, projectImg: convertedImg, thumbnailType: orderData.thumbnailType, thumbnailImg: orderData.thumbnailImg, serviceDescription: orderData.serviceDescription, state: false };
+
+        ordersCollection.insertOne(readyData)
+            .then(result => {
+                if (result.success) {
+                    res.sendStatus(200);
+                    console.log('Posted Successfully')
+                }
+            })
+            .catch(err => console.log(err))
+    });
+
+
+    //add admins
+    app.post('/add-admin', (req, res) => {
+        const admin = req.body;
+        adminsCollection.insertOne(admin)
+            .then(result => {
+                if (result.success) {
+                    res.sendStatus(200);
+                    console.log('Posted Successfully')
+                }
+            })
+            .catch(err => console.log(err))
     })
 
     console.log(err ? err : "no error")
 });
-
-
-
-//add orders by customer
-app.post('/add-orders', (req, res) => {
-    const order = req.body;
-
-    ordersCollection.insertOne(order)
-        .then(result => {
-            if (result.success) {
-                res.sendStatus(200);
-                console.log('Posted Successfully')
-            }
-        })
-        .catch(err => console.log(err));
-
-    // const projectImg = req.files.projectImg;
-    // const type = projectImg.mimetype;
-    // const size = projectImg.size;
-    // const orderData = req.body;
-    // const imgData = projectImg.data;
-    // const encImg = imgData.toString('base64');
-
-    // const convertedImg = {
-    //     contentType: type,
-    //     size: parseFloat(size),
-    //     img: Buffer.from(encImg, 'base64')
-    // };
-    // const readyData = { service: orderData.service, description: orderData.description, name: orderData.name, email: orderData.email, price: orderData.price, projectImg: convertedImg };
-
-    // ordersCollection.insertOne(readyData)
-    //     .then(result => {
-    //         if (result.success) {
-    //             res.sendStatus(200);
-    //             console.log('Posted Successfully')
-    //         }
-    //     })
-    //     .catch(err => console.log(err))
-})
-
-
-
 
 app.listen(3100);
