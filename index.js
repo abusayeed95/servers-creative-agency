@@ -23,6 +23,11 @@ client.connect(err => {
     const ordersCollection = client.db(DB_NAME).collection('orders');
     const adminsCollection = client.db(DB_NAME).collection('admins');
 
+    //root
+    app.get('/', (req, res) => {
+        res.send('working')
+    })
+
     //all services
     app.get('/services', (req, res) => {
         servicesCollection.find({})
