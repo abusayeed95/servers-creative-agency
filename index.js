@@ -25,8 +25,9 @@ client.connect(err => {
 
     //root
     app.get('/', (req, res) => {
-        res.send('working')
-    })
+        res.send('Welcome')
+    });
+
 
     //all services
     app.get('/services', (req, res) => {
