@@ -188,4 +188,4 @@ client.connect(err => {
     console.log(err ? err : "no error")
 });
 
-app.listen(3100 || PORT);
+app.listen(process.env.PORT || 3100);
