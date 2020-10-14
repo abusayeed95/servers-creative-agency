@@ -25,7 +25,7 @@ client.connect(err => {
 
     //root
     app.get('/', (req, res) => {
-        res.send('<h1> Welcome to Volunteer Network Database</h1>');
+        res.send('<h1> Welcome to Creative Agency Database</h1>');
     });
 
 
