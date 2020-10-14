@@ -145,7 +145,7 @@ client.connect(err => {
             size: parseFloat(size),
             img: Buffer.from(encImg, 'base64')
         };
-        const readyData = { service: orderData.service, orderDescription: orderData.orderDescription, name: orderData.name, email: orderData.email, price: orderData.price, projectImg: convertedImg, thumbnailType: orderData.thumbnailType, thumbnailImg: orderData.thumbnailImg, serviceDescription: orderData.serviceDescription, state: false };
+        const readyData = { service: orderData.service, orderDescription: orderData.orderDescription, name: orderData.name, email: orderData.email, price: orderData.price, projectImg: convertedImg, thumbnailType: orderData.thumbnailType, thumbnailImg: orderData.thumbnailImg, serviceDescription: orderData.serviceDescription, state: 'Pending' };
 
         ordersCollection.insertOne(readyData)
             .then(result => {
