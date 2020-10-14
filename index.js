@@ -5,10 +5,11 @@ require('dotenv').config();
 const MongoClient = require('mongodb').MongoClient;
 const fileUpload = require('express-fileupload');
 const fs = require('fs-extra');
+const ObjectId = require('mongodb').ObjectId;
 
-const { DB_USER, DB_PASS, DB_NAME, PORT, DB_SERVICES_COLLECTION } = process.env;
+const { DB_USER, DB_PASS, DB_NAME, PORT } = process.env;
 
-const uri = `mongodb+srv://creativeUser:creativePassword@cluster0.d5mpt.mongodb.net/creativeAgencyDatabase?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${DB_USER}:${DB_PASS}@cluster0.d5mpt.mongodb.net/${DB_NAME}?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const app = express();
@@ -17,10 +18,10 @@ app.use(bodyParser.json());
 app.use(fileUpload())
 
 client.connect(err => {
-    const servicesCollection = client.db('creativeAgencyDatabase').collection('ourServices');
-    const feedbacksCollection = client.db('creativeAgencyDatabase').collection('usersFeedbacks');
-    const ordersCollection = client.db('creativeAgencyDatabase').collection('orders');
-    const adminsCollection = client.db('creativeAgencyDatabase').collection('admins');
+    const servicesCollection = client.db(DB_NAME).collection('ourServices');
+    const feedbacksCollection = client.db(DB_NAME).collection('usersFeedbacks');
+    const ordersCollection = client.db(DB_NAME).collection('orders');
+    const adminsCollection = client.db(DB_NAME).collection('admins');
 
     //all services
     app.get('/services', (req, res) => {
@@ -103,9 +104,8 @@ client.connect(err => {
 
         servicesCollection.insertOne(readyData)
             .then(result => {
-                if (result.success) {
+                if (result.insertedCount > 0) {
                     res.sendStatus(200);
-                    console.log('Posted Successfully')
                 }
             })
             .catch(err => console.log(err))
@@ -118,9 +118,8 @@ client.connect(err => {
 
         feedbacksCollection.insertOne(feedback)
             .then(result => {
-                if (result.success) {
+                if (result.insertedCount > 0) {
                     res.sendStatus(200);
-                    console.log('Posted Successfully')
                 }
             })
             .catch(err => console.log(err))
@@ -144,9 +143,8 @@ client.connect(err => {
 
         ordersCollection.insertOne(readyData)
             .then(result => {
-                if (result.success) {
+                if (result.insertedCount > 0) {
                     res.sendStatus(200);
-                    console.log('Posted Successfully')
                 }
             })
             .catch(err => console.log(err))
@@ -158,15 +156,30 @@ client.connect(err => {
         const admin = req.body;
         adminsCollection.insertOne(admin)
             .then(result => {
-                if (result.success) {
+                if (result.insertedCount > 0) {
                     res.sendStatus(200);
-                    console.log('Posted Successfully')
                 }
             })
             .catch(err => console.log(err))
-    })
+    });
+
+    //Update state of orders
+    app.patch('/order-state/:id', (req, res) => {
+        console.log(req.params.id, req.body)
+        ordersCollection.updateOne({ _id: ObjectId(req.params.id) }, {
+            $set: { state: req.body.state }
+        })
+            .then(result => {
+                if (result.modifiedCount > 0) {
+                    res.sendStatus(200);
+                    res.send({ "state": `${req.body.state}` })
+                }
+            })
+            .catch(err => console.log(err))
+    });
+
 
     console.log(err ? err : "no error")
 });
 
-app.listen(3100);
+app.listen(3100 || PORT);
